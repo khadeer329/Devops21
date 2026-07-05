@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DIR="/khadeer/Scrpits:"
+mkdir -p "$DIR"
+
+touch "$DIR/file1.txt" "$DIR/file2.txt" "$DIR/file3.txt"
+echo "Files created in $DIR"

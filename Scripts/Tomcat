@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -e
+
+TOMCAT_VERSION="10.1.56"
+TOMCAT_USER="tomcat"
+TOMCAT_HOME="/opt/apache-tomcat-$TOMCAT_VERSION"
+
+sudo yum update -y
+sudo yum install -y java-1.8.0-openjdk-devel wget tar
+
+cd /tmp
+wget "https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.56/bin/apache-tomcat-10.1.56.tar.gz"
+sudo tar -xzf "apache-tomcat-10.1.56.tar.gz" -C /opt
+sudo mv "/opt/apache-tomcat-$TOMCAT_VERSION" "$TOMCAT_HOME" 2>/dev/null || true
+
+sudo useradd -r -m -U -d /opt/tomcat -s /sbin/nologin "$TOMCAT_USER" 2>/dev/null || true
+sudo chown -R "$TOMCAT_USER:$TOMCAT_USER" "$TOMCAT_HOME"
+
+sudo bash -c "cat > /etc/systemd/system/tomcat.service" <<EOF
+[Unit]
+Description=Apache Tomcat
+After=network.target
+
+[Service]
+Type=forking
+User=$TOMCAT_USER
+Group=$TOMCAT_USER
+Environment=CATALINA_HOME=$TOMCAT_HOME
+Environment=CATALINA_BASE=$TOMCAT_HOME
+ExecStart=$TOMCAT_HOME/bin/startup.sh
+ExecStop=$TOMCAT_HOME/bin/shutdown.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable tomcat
+sudo systemctl start tomcat
+
+echo "Tomcat installed and started"
